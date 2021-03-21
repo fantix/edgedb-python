@@ -1,4 +1,5 @@
 import argparse
+import dataclasses
 import importlib
 import inspect
 import os
@@ -122,6 +123,9 @@ def generate_c_type_stub(
         )
     else:
         bases_str = ""
+    output.append('')
+    if dataclasses.is_dataclass(obj):
+        output.append("@dataclasses.dataclass")
     if not methods and not variables and not properties:
         output.append("class %s%s: ..." % (class_name, bases_str))
     else:
@@ -190,7 +194,7 @@ def generate_stub_for_c_module(
             if type_str not in ("int", "str", "bytes", "float", "bool"):
                 type_str = "Any"
             variables.append("%s: %s" % (name, type_str))
-    output = ['from typing import Any']
+    output = ['import dataclasses', 'from typing import Any']
     for line in sorted(set(imports)):
         output.append(line)
     for line in variables:
@@ -200,8 +204,6 @@ def generate_stub_for_c_module(
     for line in functions:
         output.append(line)
     for line in types:
-        if line.startswith("class") and output and output[-1]:
-            output.append("")
         output.append(line)
     with open(target, "w") as file:
         for line in output:
