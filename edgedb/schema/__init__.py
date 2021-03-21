@@ -25,7 +25,7 @@ class Object(BaseObject):
     pass
 
 
-class AnyScalar:
+class anyscalar:
     __edb_abstract__ = True
 
 
@@ -80,7 +80,7 @@ class EdgeDBModuleImporter(MetaPathFinder, Loader):
     predefined_types = {
         "std::BaseObject": BaseObject,
         "std::Object": Object,
-        "std::anyscalar": AnyScalar,
+        "std::anyscalar": anyscalar,
     }
     type_mapping = {
         "std::int16": int,
@@ -246,6 +246,7 @@ class EdgeDBModuleImporter(MetaPathFinder, Loader):
             more_deps = []
             if name in self.predefined_types:
                 t = self.predefined_types[name]
+                dict_.pop("__module__")
                 for k, v in dict_.items():
                     setattr(t, k, v)
             else:
@@ -266,7 +267,7 @@ class EdgeDBModuleImporter(MetaPathFinder, Loader):
                         not in set(
                             b
                             for base in bases
-                            for i, b in enumerate(base.__mro__)
+                            for i, b in enumerate(base.mro())
                             if i > 0
                         )
                     )

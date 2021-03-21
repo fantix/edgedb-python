@@ -94,8 +94,12 @@ def generate_c_type_stub(
     for attr, value in items:
         if stubgenc.is_skipped_attribute(attr):
             continue
-        if attr not in done:
-            variables.append("%s: Any = ..." % attr)
+        for base in obj.mro()[1:]:
+            if attr in base.__dict__:
+                break
+        else:
+            if attr not in done:
+                variables.append("%s: Any = ..." % attr)
     all_bases = obj.mro()
     if all_bases[-1] is object:
         # TODO: Is this always object?
@@ -163,6 +167,9 @@ def generate_stub_for_c_module(
     for name, obj in items:
         if name.startswith("__") and name.endswith("__"):
             continue
+        if obj.__module__ != module.__name__:
+            done.add(name)
+            continue
         if stubgenc.is_c_type(obj):
             generate_c_type_stub(
                 module,
@@ -183,7 +190,7 @@ def generate_stub_for_c_module(
             if type_str not in ("int", "str", "bytes", "float", "bool"):
                 type_str = "Any"
             variables.append("%s: %s" % (name, type_str))
-    output = []
+    output = ['from typing import Any']
     for line in sorted(set(imports)):
         output.append(line)
     for line in variables:
@@ -196,7 +203,6 @@ def generate_stub_for_c_module(
         if line.startswith("class") and output and output[-1]:
             output.append("")
         output.append(line)
-    output = stubgenc.add_typing_import(output)
     with open(target, "w") as file:
         for line in output:
             file.write("%s\n" % line)
