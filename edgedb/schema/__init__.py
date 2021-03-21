@@ -323,7 +323,7 @@ class EdgeDBModuleImporter(MetaPathFinder, Loader):
         return self
 
 
-__all__ = ("BaseModelMeta", "BaseObject", "Object", "EdgeDBModuleImporter")
+__all__ = ("BaseModelMeta", "BaseObject", "Object", "anyscalar", "EdgeDBModuleImporter")
 
 from edgedb import connect as _connect
 
