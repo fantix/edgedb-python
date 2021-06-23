@@ -19,6 +19,7 @@
 
 import random
 import socket
+import ssl
 import time
 import typing
 import warnings
@@ -119,6 +120,13 @@ class _BlockingIOConnectionImpl:
             if not isinstance(addr, str):
                 sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 
+            ctx = ssl.create_default_context()
+            ctx.set_alpn_protocols(['edgedb-binary'])
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_REQUIRED
+            ctx.load_verify_locations(cadata=params.certdata)
+            sock = ctx.wrap_socket(sock)
+            assert sock.selected_alpn_protocol() == 'edgedb-binary'
             proto = blocking_proto.BlockingIOProtocol(params, sock)
             proto.set_connection(connection)
 

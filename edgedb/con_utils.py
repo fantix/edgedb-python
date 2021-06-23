@@ -54,6 +54,7 @@ class ConnectionParameters(typing.NamedTuple):
     database: str
     connect_timeout: float
     server_settings: typing.Mapping[str, str]
+    certdata: typing.Optional[bytes]
 
 
 class ClientConfiguration(typing.NamedTuple):
@@ -139,6 +140,7 @@ def _parse_connect_dsn_and_args(*, dsn, host, port, user,
                                 password, database, admin,
                                 connect_timeout, server_settings):
     using_credentials = False
+    certdata = None
 
     if admin:
         warnings.warn(
@@ -278,6 +280,7 @@ def _parse_connect_dsn_and_args(*, dsn, host, port, user,
             password = creds['password']
         if database is None and 'database' in creds:
             database = creds['database']
+        certdata = creds.get('tls_certdata', None)
 
     if not host:
         hostspec = os.environ.get('EDGEDB_HOST')
@@ -374,7 +377,9 @@ def _parse_connect_dsn_and_args(*, dsn, host, port, user,
         password=password,
         database=database,
         connect_timeout=connect_timeout,
-        server_settings=server_settings)
+        server_settings=server_settings,
+        certdata=certdata,
+    )
 
     return addrs, params
 

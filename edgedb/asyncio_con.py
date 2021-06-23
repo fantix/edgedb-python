@@ -20,6 +20,7 @@
 import asyncio
 import random
 import socket
+import ssl
 import time
 import typing
 import warnings
@@ -110,7 +111,13 @@ class _AsyncIOConnectionImpl:
                 # UNIX socket
                 tr, pr = await loop.create_unix_connection(factory, addr)
             else:
-                tr, pr = await loop.create_connection(factory, *addr)
+                ctx = ssl.create_default_context()
+                ctx.set_alpn_protocols(['edgedb-binary'])
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_REQUIRED
+                ctx.load_verify_locations(cadata=params.certdata)
+                tr, pr = await loop.create_connection(factory, *addr, ssl=ctx)
+                assert tr.get_extra_info('ssl_object').selected_alpn_protocol() == 'edgedb-binary'
         except socket.gaierror as e:
             # All name resolution errors are considered temporary
             raise errors.ClientConnectionFailedTemporarilyError(str(e)) from e

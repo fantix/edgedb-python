@@ -66,4 +66,10 @@ def validate_credentials(data: dict) -> Credentials:
             raise ValueError("`password` must be a string")
         result['password'] = password
 
+    certdata = data.get('tls_certdata')
+    if certdata is not None:
+        if not isinstance(certdata, str):
+            raise ValueError("`tls_certdata` must be a string")
+        result['tls_certdata'] = certdata
+
     return result
